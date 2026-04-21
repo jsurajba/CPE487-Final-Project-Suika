@@ -1,2 +1,2 @@
-# CPE487 Final Project - Bloons Tower Defense
-An FPGA rendition of the popular tower defense game
+# CPE487 Final Project - Suika
+A viral, addictive "drop-and-merge" puzzle game where layers drop various fruits into a container, combining matching fruits to create larger ones, aiming to create a massive watermelon without letting the fruit overflow the top
