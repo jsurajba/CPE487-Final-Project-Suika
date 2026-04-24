@@ -21,6 +21,7 @@ ARCHITECTURE Behavioral OF vga_top IS
     SIGNAL S_pixel_row, S_pixel_col : STD_LOGIC_VECTOR (10 DOWNTO 0);
     COMPONENT suika_renderer IS
         PORT (
+            v_sync    : IN STD_LOGIC;
             pixel_row : IN STD_LOGIC_VECTOR(10 DOWNTO 0);
             pixel_col : IN STD_LOGIC_VECTOR(10 DOWNTO 0);
             red : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
@@ -58,6 +59,7 @@ BEGIN
     draw_game : suika_renderer
     PORT MAP(
         --instantiate suika_renderer component
+        v_sync    => S_vsync,
         pixel_row => S_pixel_row, 
         pixel_col => S_pixel_col, 
         red       => S_red, 

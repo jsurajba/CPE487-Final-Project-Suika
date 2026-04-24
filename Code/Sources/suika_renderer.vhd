@@ -4,6 +4,7 @@ USE IEEE.NUMERIC_STD.ALL;
 
 ENTITY suika_renderer IS
     PORT (
+        v_sync    : IN STD_LOGIC;
         pixel_row : IN STD_LOGIC_VECTOR(10 DOWNTO 0);
         pixel_col : IN STD_LOGIC_VECTOR(10 DOWNTO 0);
         red       : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
@@ -18,8 +19,8 @@ ARCHITECTURE Behavioral OF suika_renderer IS
     CONSTANT SCREEN_HEIGHT : INTEGER := 480;
 
     -- Game Container (The Bucket) Coordinates
-    CONSTANT BOX_LEFT   : INTEGER := 220;
-    CONSTANT BOX_RIGHT  : INTEGER := 420;
+    CONSTANT BOX_LEFT   : INTEGER := 180;
+    CONSTANT BOX_RIGHT  : INTEGER := 480;
     CONSTANT BOX_BOTTOM : INTEGER := 440;
     CONSTANT BOX_TOP    : INTEGER := 80;
     CONSTANT WALL_THICK : INTEGER := 4;
@@ -27,7 +28,7 @@ ARCHITECTURE Behavioral OF suika_renderer IS
     -- Test Fruit (Cherry) Properties
     CONSTANT CHERRY_X : INTEGER := 320;
     CONSTANT CHERRY_Y : INTEGER := 350;
-    CONSTANT CHERRY_R : INTEGER := 15;
+    CONSTANT CHERRY_R : INTEGER := 8;
 
 BEGIN
     process(pixel_row, pixel_col)
