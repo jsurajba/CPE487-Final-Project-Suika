@@ -30,8 +30,6 @@ ARCHITECTURE Behavioral OF suika_renderer IS
     CONSTANT CHERRY_X : INTEGER := 320;
     CONSTANT CHERRY_Y : INTEGER := 350;
     CONSTANT CHERRY_R : INTEGER := 8;
-<<<<<<< Updated upstream
-=======
     
     -- Physics Engine
     SIGNAL left : STD_LOGIC;
@@ -48,7 +46,6 @@ ARCHITECTURE Behavioral OF suika_renderer IS
         all_fruits : out fruit_array
     );
     END COMPONENT;
->>>>>>> Stashed changes
 
 BEGIN
     process(pixel_row, pixel_col)
