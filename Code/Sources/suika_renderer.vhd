@@ -1,6 +1,7 @@
 LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
 USE IEEE.NUMERIC_STD.ALL;
+use work.fruit_pkg.all;
 
 ENTITY suika_renderer IS
     PORT (
@@ -29,6 +30,25 @@ ARCHITECTURE Behavioral OF suika_renderer IS
     CONSTANT CHERRY_X : INTEGER := 320;
     CONSTANT CHERRY_Y : INTEGER := 350;
     CONSTANT CHERRY_R : INTEGER := 8;
+<<<<<<< Updated upstream
+=======
+    
+    -- Physics Engine
+    SIGNAL left : STD_LOGIC;
+    SIGNAL right : STD_LOGIC;
+    SIGNAL drop : STD_LOGIC;
+    SIGNAL all_fruits : STD_LOGIC_VECTOR(19 DOWNTO 0);
+    
+    COMPONENT physics_engine is
+    PORT (
+        v_sync    : IN STD_LOGIC;
+        -- Buttons for the "Aim" phase
+        btnL, btnR, btnDrop : in std_logic;
+        -- The output data to the renderer
+        all_fruits : out fruit_array
+    );
+    END COMPONENT;
+>>>>>>> Stashed changes
 
 BEGIN
     process(pixel_row, pixel_col)
@@ -74,4 +94,13 @@ BEGIN
         end if;
 
     end process;
+    
+    physics_driver : physics_engine
+    PORT MAP(
+        v_sync => v_sync,
+        left => btnL,
+        right => btnR,
+        drop => btnDrop,
+        all_fruits => all_fruits
+    );
 END Behavioral;
