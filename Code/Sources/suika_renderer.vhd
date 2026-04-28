@@ -35,7 +35,7 @@ ARCHITECTURE Behavioral OF suika_renderer IS
     SIGNAL left : STD_LOGIC;
     SIGNAL right : STD_LOGIC;
     SIGNAL drop : STD_LOGIC;
-    SIGNAL all_fruits : STD_LOGIC_VECTOR(19 DOWNTO 0);
+    SIGNAL all_fruits : fruit_array;
     
     COMPONENT physics_engine is
     PORT (
@@ -94,10 +94,9 @@ BEGIN
     
     physics_driver : physics_engine
     PORT MAP(
-        v_sync => v_sync,
-        left => btnL,
-        right => btnR,
-        drop => btnDrop,
+        btnL => left,
+        btnR => right,
+        btnDrop => drop,
         all_fruits => all_fruits
     );
 END Behavioral;
