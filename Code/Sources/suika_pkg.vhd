@@ -19,11 +19,11 @@ package suika_pkg is
     -- Play area ("the jar"): 300 wide x 530 tall, centered horizontally
     constant PLAY_LEFT  : integer := 250;
     constant PLAY_RIGHT : integer := 550;
-    constant PLAY_TOP   : integer := 50;
-    constant PLAY_BOT   : integer := 580;
+    constant PLAY_TOP   : integer := 200;
+    constant PLAY_BOT   : integer := 400;
 
     -- Game-over line
-    constant GAMEOVER_LINE : integer := 80;
+    constant GAMEOVER_LINE : integer := 220;
 
     ----------------------------------------------------------------------------
     -- Game parameters

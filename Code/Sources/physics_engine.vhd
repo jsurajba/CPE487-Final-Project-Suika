@@ -2,22 +2,22 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-
+ 
 use work.suika_pkg.all;
-
+ 
 entity physics_engine is
     port (
         clk          : in  std_logic;
         rst          : in  std_logic;
-
+ 
         -- One-cycle pulse per VSYNC from game_controller
         frame_tick   : in  std_logic;
-
+ 
         -- Spawn request from game controller (drop a fruit from the top)
         spawn_req    : in  std_logic;
         spawn_x      : in  unsigned(10 downto 0);   -- pixel x
         spawn_type   : in  unsigned(3 downto 0);
-
+ 
         -- Outputs
         fruits_out   : out fruit_array_t;
         busy         : out std_logic;           -- '1' while computing a frame
@@ -28,9 +28,9 @@ entity physics_engine is
         fruit_in_flight : out std_logic
     );
 end entity;
-
+ 
 architecture rtl of physics_engine is
-
+ 
     type state_t is (
         S_IDLE,
         S_INTEGRATE,       -- per-fruit gravity + drag + grace countdown
@@ -45,32 +45,32 @@ architecture rtl of physics_engine is
         S_DONE
     );
     signal state : state_t := S_IDLE;
-
+ 
     signal fruits : fruit_array_t := (others => FRUIT_NULL);
-
+ 
     -- Loop indices
     signal i_idx : integer range 0 to MAX_FRUITS := 0;
     signal j_idx : integer range 0 to MAX_FRUITS := 0;
-
+ 
     -- Latched overlap vector for collision response
     signal pair_dx : signed(16 downto 0);
     signal pair_dy : signed(16 downto 0);
     signal pair_r_sum : integer range 0 to 4095 := 0;
-
+ 
     -- Merge intermediate state
     signal merge_pending : std_logic := '0';
     signal merge_x       : fixed_t;
     signal merge_y       : fixed_t;
     signal merge_type    : unsigned(3 downto 0);
-
+ 
     -- Spawn request latch
     signal spawn_latched : std_logic := '0';
     signal spawn_x_lat   : unsigned(10 downto 0);
     signal spawn_t_lat   : unsigned(3 downto 0);
-
+ 
     -- Game-over output register
     signal gameover_reg  : std_logic := '0';
-
+ 
     -- Per-fruit grace countdown.
     -- Set to GRACE_FRAMES when a fruit is player-dropped; 0 for merged fruits.
     -- Decremented once per frame in S_INTEGRATE.
@@ -78,15 +78,15 @@ architecture rtl of physics_engine is
     constant GRACE_FRAMES : integer := 45;
     type grace_array_t is array (0 to MAX_FRUITS-1) of unsigned(6 downto 0);
     signal grace_cnt : grace_array_t := (others => (others => '0'));
-
+ 
     -- Score outputs
     signal score_pulse_r : std_logic := '0';
     signal score_value_r : unsigned(7 downto 0) := (others => '0');
     
     signal col_iter : integer range 0 to 3 := 0;
-
+ 
 begin
-
+ 
     fruits_out  <= fruits;
     busy        <= '0' when state = S_IDLE else '1';
     gameover    <= gameover_reg;
@@ -105,7 +105,7 @@ begin
                     end if;
             end loop;
         end process;
-
+ 
     --==========================================================================
     -- Main FSM
     -- The spawn-request latch and the physics pipeline share this one process
@@ -122,14 +122,13 @@ begin
         variable settled                : std_logic;
         variable abs_dx_v, abs_dy_v     : integer;
         variable dist_mn, penetration   : integer;
-        variable rel_v : integer;
         variable i_at_rest, j_at_rest : boolean;
     begin
         if rising_edge(clk) then
                 
             score_pulse_r <= '0';   -- default: no score event this cycle
             spawn_accepted <= '0';
-
+ 
             -- ----------------------------------------------------------------
             -- Latch incoming spawn request (cleared by S_SPAWN_SCAN)
             -- ----------------------------------------------------------------
@@ -140,7 +139,7 @@ begin
                 spawn_x_lat   <= spawn_x;
                 spawn_t_lat   <= spawn_type;
             end if;
-
+ 
             -- ----------------------------------------------------------------
             -- Synchronous reset
             -- ----------------------------------------------------------------
@@ -156,7 +155,7 @@ begin
                 col_iter <= 0;
             else
                 case state is
-
+ 
                     ------------------------------------------------------------
                     when S_IDLE =>
                         if gameover_reg = '0' and frame_tick = '1' then
@@ -175,37 +174,37 @@ begin
                                 spawn_accepted <= '1';   -- pulse to advance preview in controller
                             end if;
                         end if;
-
+ 
                     ------------------------------------------------------------
                     when S_INTEGRATE =>
                         if fruits(i_idx).active = '1' then
-
+ 
                             -- Mild horizontal air drag
                             fruits(i_idx).vx <= fp_damp_15_16(fruits(i_idx).vx);
-
+ 
                             -- Gravity with terminal-velocity clamp
                             new_vy := fruits(i_idx).vy + GRAVITY_FP;
                             if new_vy >  VMAX_FP then new_vy :=  VMAX_FP; end if;
                             if new_vy < -VMAX_FP then new_vy := -VMAX_FP; end if;
                             fruits(i_idx).vy <= new_vy;
-
+ 
                             -- Euler position step
                             fruits(i_idx).x <= fruits(i_idx).x + fruits(i_idx).vx;
                             fruits(i_idx).y <= fruits(i_idx).y + new_vy;
-
+ 
                             -- Count down the game-over grace period
                             if grace_cnt(i_idx) /= 0 then
                                 grace_cnt(i_idx) <= grace_cnt(i_idx) - 1;
                             end if;
                         end if;
-
+ 
                         if i_idx = MAX_FRUITS-1 then
                             state <= S_WALLS;
                             i_idx <= 0;
                         else
                             i_idx <= i_idx + 1;
                         end if;
-
+ 
                     ------------------------------------------------------------
                     when S_WALLS =>
                         if fruits(i_idx).active = '1' then
@@ -213,7 +212,7 @@ begin
                             fr_left  := to_fp(PLAY_LEFT  + r_i);
                             fr_right := to_fp(PLAY_RIGHT - r_i);
                             fr_bot   := to_fp(PLAY_BOT   - r_i);
-
+ 
                             -- Left wall
                             if fruits(i_idx).x < fr_left then
                                 fruits(i_idx).x  <= fr_left;
@@ -231,14 +230,14 @@ begin
                                 fruits(i_idx).vx <= fp_damp_1_2(fruits(i_idx).vx);  -- bleed horizontal too
                             end if;
                         end if;
-
+ 
                         if i_idx = MAX_FRUITS-1 then
                             state <= S_COL_OUTER;
                             i_idx <= 0;
                         else
                             i_idx <= i_idx + 1;
                         end if;
-
+ 
                     ------------------------------------------------------------
                     when S_COL_OUTER =>
                         if i_idx >= MAX_FRUITS-1 then
@@ -250,10 +249,10 @@ begin
                         else
                             i_idx <= i_idx + 1;
                         end if;
-
+ 
                     when S_COL_INNER_LOAD =>
                         state <= S_COL_CHECK;   -- 1 idle cycle relaxes timing
-
+ 
                     ------------------------------------------------------------
                     when S_COL_CHECK =>
                         if fruits(j_idx).active = '1' then
@@ -289,12 +288,12 @@ begin
                                 state <= S_COL_INNER_LOAD;
                             end if;
                         end if;
-
+ 
                     ------------------------------------------------------------
                     when S_COL_RESPOND =>
                         if fruits(i_idx).ftype = fruits(j_idx).ftype
                            and to_integer(fruits(i_idx).ftype) < NUM_TYPES-1 then
-
+ 
                             -- Same type: MERGE
                             merge_x       <= shift_right(
                                                 fruits(i_idx).x + fruits(j_idx).x, 1);
@@ -307,7 +306,7 @@ begin
                             grace_cnt(i_idx) <= (others => '0');
                             grace_cnt(j_idx) <= (others => '0');
                             state <= S_COL_MERGE;
-
+ 
                         else
                             abs_dx_v := abs(to_integer(pair_dx));
                             abs_dy_v := abs(to_integer(pair_dy));
@@ -320,13 +319,9 @@ begin
                             if dist_mn < 16 then dist_mn := 16; end if;
                         
                             penetration := pair_r_sum - dist_mn;
-                            if penetration < 16 then penetration := 0; end if;
+                            if penetration < 4 then penetration := 0; end if;
                             if penetration > 160 then penetration := 160; end if;
-                        
-                            rel_v := abs(to_integer(fruits(i_idx).vy) - to_integer(fruits(j_idx).vy)) +
-                                     abs(to_integer(fruits(i_idx).vx) - to_integer(fruits(j_idx).vx));
-                            if rel_v < 16 then penetration := 0; end if;
-                        
+ 
                             -- Settled = grace expired AND barely moving
                             i_at_rest := grace_cnt(i_idx) = 0 and
                                          abs(to_integer(fruits(i_idx).vy)) <= 4 and
@@ -334,27 +329,45 @@ begin
                             j_at_rest := grace_cnt(j_idx) = 0 and
                                          abs(to_integer(fruits(j_idx).vy)) <= 4 and
                                          abs(to_integer(fruits(j_idx).vx)) <= 4;
-                            
+ 
                             if i_at_rest and j_at_rest then
-                                -- ADD: both settled, freeze entirely
+                                -- Both settled: freeze entirely
                                 fruits(i_idx).vx <= (others => '0');
                                 fruits(i_idx).vy <= (others => '0');
                                 fruits(j_idx).vx <= (others => '0');
                                 fruits(j_idx).vy <= (others => '0');
-                                
+ 
                             elsif penetration > 0 then
                                 px := (to_integer(pair_dx) * penetration) / (dist_mn * 2);
                                 py := (to_integer(pair_dy) * penetration) / (dist_mn * 2);
-                        
+ 
+                                 -- Anti-wedge: when a moving fruit is in a mostly-horizontal
+                                -- contact with a settled fruit and is still at or above the
+                                -- settled fruit's centre, the natural correction has almost no
+                                -- vertical component, so the moving fruit slides past instead
+                                -- of stacking on top. Inject an upward bias to lift it into
+                                -- the saddle position.
+                                if abs_dx_v > abs_dy_v * 2 then
+                                    if i_at_rest and not j_at_rest and
+                                       to_integer(pair_dy) <= 0 and
+                                       to_integer(fruits(j_idx).vy) >= 0 then
+                                        py := py - 4;   -- ~0.5 px lift after the *2 doubling
+                                    elsif not i_at_rest and j_at_rest and
+                                          to_integer(pair_dy) >= 0 and
+                                          to_integer(fruits(i_idx).vy) >= 0 then
+                                        py := py + 4;
+                                    end if;
+                                end if;
+ 
                                 if abs_dy_v >= abs_dx_v then
                                     px := px / 2;
                                 end if;
-                        
+ 
                                 if px > 64  then px := 64;  end if;
                                 if px < -64 then px := -64; end if;
                                 if py > 64  then py := 64;  end if;
                                 if py < -64 then py := -64; end if;
-                        
+ 
                                 -- One-sided correction: settled fruit is an immovable wall
                                 if i_at_rest and not j_at_rest then
                                     fruits(j_idx).x <= fruits(j_idx).x + to_signed(px * 2, 16);
@@ -368,28 +381,68 @@ begin
                                     fruits(j_idx).x <= fruits(j_idx).x + to_signed(px, 16);
                                     fruits(j_idx).y <= fruits(j_idx).y + to_signed(py, 16);
                                 end if;
-                        
-                                -- Velocity: only damp the moving fruit
+ 
+                                -- Velocity: direction-aware damping with INTO-contact zeroing.
+                                -- pair_d = (pair_dx, pair_dy) FROM i TO j.
+                                -- "j into i" = j velocity OPPOSITE to pair_d.
+                                -- "i into j" = i velocity SAME sign as pair_d.
+                                -- Only the dominant-axis component is zeroed/damped hard;
+                                -- the perpendicular gets gentle friction so a falling fruit
+                                -- is not blocked by a side neighbour.
                                 if abs_dy_v >= abs_dx_v then
+                                    -- Vertical contact
                                     if not i_at_rest then
-                                        fruits(i_idx).vy <= fp_damp_1_2(fp_damp_1_2(fruits(i_idx).vy));
+                                        if (to_integer(fruits(i_idx).vy) > 0 and to_integer(pair_dy) > 0) or
+                                           (to_integer(fruits(i_idx).vy) < 0 and to_integer(pair_dy) < 0) then
+                                            fruits(i_idx).vy <= (others => '0');
+                                        else
+                                            fruits(i_idx).vy <= fp_damp_1_2(fp_damp_1_2(fruits(i_idx).vy));
+                                        end if;
                                         fruits(i_idx).vx <= fp_damp_3_4(fruits(i_idx).vx);
                                     end if;
                                     if not j_at_rest then
-                                        fruits(j_idx).vy <= fp_damp_1_2(fp_damp_1_2(fruits(j_idx).vy));
+                                        if (to_integer(fruits(j_idx).vy) > 0 and to_integer(pair_dy) < 0) or
+                                           (to_integer(fruits(j_idx).vy) < 0 and to_integer(pair_dy) > 0) then
+                                            fruits(j_idx).vy <= (others => '0');
+                                        else
+                                            fruits(j_idx).vy <= fp_damp_1_2(fp_damp_1_2(fruits(j_idx).vy));
+                                        end if;
                                         fruits(j_idx).vx <= fp_damp_3_4(fruits(j_idx).vx);
                                     end if;
+                                    
                                 else
+                                    -- Horizontal contact: zero INTO-contact vx; vy is zeroed
+                                    -- when the moving fruit sits above a settled neighbour
+                                    -- (anti-wedge), otherwise gentle friction so a fruit can
+                                    -- still fall past a single side neighbour at lower height.
                                     if not i_at_rest then
-                                        fruits(i_idx).vx <= fp_damp_1_2(fp_damp_1_2(fruits(i_idx).vx));
-                                        fruits(i_idx).vy <= fp_damp_3_4(fruits(i_idx).vy);
+                                        if (to_integer(fruits(i_idx).vx) > 0 and to_integer(pair_dx) > 0) or
+                                           (to_integer(fruits(i_idx).vx) < 0 and to_integer(pair_dx) < 0) then
+                                            fruits(i_idx).vx <= (others => '0');
+                                        else
+                                            fruits(i_idx).vx <= fp_damp_1_2(fp_damp_1_2(fruits(i_idx).vx));
+                                        end if;
+                                        if j_at_rest and to_integer(pair_dy) >= 0 then
+                                            fruits(i_idx).vy <= (others => '0');
+                                        else
+                                            fruits(i_idx).vy <= fp_damp_3_4(fruits(i_idx).vy);
+                                        end if;
                                     end if;
                                     if not j_at_rest then
-                                        fruits(j_idx).vx <= fp_damp_1_2(fp_damp_1_2(fruits(j_idx).vx));
-                                        fruits(j_idx).vy <= fp_damp_3_4(fruits(j_idx).vy);
+                                        if (to_integer(fruits(j_idx).vx) > 0 and to_integer(pair_dx) < 0) or
+                                           (to_integer(fruits(j_idx).vx) < 0 and to_integer(pair_dx) > 0) then
+                                            fruits(j_idx).vx <= (others => '0');
+                                        else
+                                            fruits(j_idx).vx <= fp_damp_1_2(fp_damp_1_2(fruits(j_idx).vx));
+                                        end if;
+                                        if i_at_rest and to_integer(pair_dy) <= 0 then
+                                            fruits(j_idx).vy <= (others => '0');
+                                        else
+                                            fruits(j_idx).vy <= fp_damp_3_4(fruits(j_idx).vy);
+                                        end if;
                                     end if;
                                 end if;
-                        
+ 
                                 -- No upward boosting
                                 if to_integer(fruits(i_idx).vy) < 0 then
                                     fruits(i_idx).vy <= (others => '0');
@@ -397,7 +450,7 @@ begin
                                 if to_integer(fruits(j_idx).vy) < 0 then
                                     fruits(j_idx).vy <= (others => '0');
                                 end if;
-                        
+ 
                             else
                                 -- penetration = 0: snap residual vibration on resting contacts
                                 if i_at_rest then
@@ -418,7 +471,7 @@ begin
                                 state <= S_COL_INNER_LOAD;
                             end if;
                         end if;
-
+ 
                     ------------------------------------------------------------
                     when S_COL_MERGE =>
                         placed := false;
@@ -437,11 +490,11 @@ begin
                             end if;
                         end loop;
                         merge_pending <= '0';
-
+ 
                         score_pulse_r <= '1';
                         score_value_r <= to_unsigned(
                             MERGE_SCORE(to_integer(merge_type)), 8);
-
+ 
                         if j_idx = MAX_FRUITS-1 then
                             i_idx <= i_idx + 1;
                             state <= S_COL_OUTER;
@@ -449,7 +502,7 @@ begin
                             j_idx <= j_idx + 1;
                             state <= S_COL_INNER_LOAD;
                         end if;
-
+ 
                     ------------------------------------------------------------
                     when S_GAMEOVER_CHK =>
                         -- A fruit triggers game over only when grace_cnt = 0.
@@ -471,13 +524,13 @@ begin
                                 gameover_reg <= '1';
                             end if;
                         end if;
-
+ 
                         if i_idx = MAX_FRUITS-1 then
                             state <= S_DONE;
                         else
                             i_idx <= i_idx + 1;
                         end if;
-
+ 
                     ------------------------------------------------------------
                     when S_SPAWN_SCAN =>
                         placed := false;
@@ -498,7 +551,7 @@ begin
                         end loop;
                         spawn_latched <= '0';
                         state <= S_IDLE;
-
+ 
                     ------------------------------------------------------------
                     when S_DONE =>
                         settled := '1';
@@ -519,10 +572,10 @@ begin
                             col_iter <= 0;
                             state    <= S_IDLE;
                         end if;
-
+ 
                 end case;
             end if;
         end if;
     end process;
-
+ 
 end architecture;
