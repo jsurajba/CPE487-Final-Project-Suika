@@ -377,10 +377,10 @@ begin
                                       / (dist_approx * 2);
 
                                 -- Safety clamp (deep overlaps on first frame after merge)
-                                if px >  160 then px :=  160; end if;
-                                if px < -160 then px := -160; end if;
-                                if py >  160 then py :=  160; end if;
-                                if py < -160 then py := -160; end if;
+                                if px >  16 then px :=  16; end if;
+                                if px < -16 then px := -16; end if;
+                                if py >  16 then py :=  16; end if;
+                                if py < -16 then py := -16; end if;
 
                                 fruits(i_idx).x <= fruits(i_idx).x - to_signed(px, 16);
                                 fruits(i_idx).y <= fruits(i_idx).y - to_signed(py, 16);
@@ -480,7 +480,22 @@ begin
 
                             -- Horizontal air drag / rolling friction
                             new_vx := fp_damp_15_16(new_vx);
+                            
+                            if new_vy < 0 then new_vy := shift_right(new_vy, 4); end if;
+                            
+                            -- 2. VELOCITY DEADZONE (SLEEP)
+                            -- Kills lateral micro-sliding
+                            if abs(to_integer(new_vx)) < 3 then
+                                new_vx := (others => '0');
+                            end if;
 
+                            -- ONLY deadzone upward bounces. 
+                            -- If we deadzone positive vy, we eat gravity before it accumulates!
+                            if new_vy < 0 and abs(to_integer(new_vy)) < 3 then
+                                new_vy := (others => '0');
+                            end if;
+    
+                            
                             -- Clamp to terminal velocity
                             if new_vx >  VMAX_FP then new_vx :=  VMAX_FP; end if;
                             if new_vx < -VMAX_FP then new_vx := -VMAX_FP; end if;
