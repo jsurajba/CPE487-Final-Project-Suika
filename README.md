@@ -82,11 +82,11 @@ Video recording:
 
 ### Gameplay
 General Gameplay\
-![1](Images/gameplay.jpeg)
+![1](Images/gameplay.png)
 Leveling up\
-![2](Images/leveling_up.jpeg)
+![2](Images/leveling_up.png)
 Game Over\
-![3](Images/game_over.jpeg)
+![3](Images/game_over.png)
 
 ## Conclusion
 
