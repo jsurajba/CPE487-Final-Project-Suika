@@ -12,11 +12,11 @@ set_property -dict { PACKAGE_PIN E3   IOSTANDARD LVCMOS33 } [get_ports clk_100]
 create_clock -name sysclk -period 10.00 [get_ports clk_100]
 
 ## --------- Buttons (active high) ---------
-##  btn[0] = BTNC (reset)
+##  btn[0] = BTND (reset)
 ##  btn[1] = BTNU (drop)
 ##  btn[2] = BTNL (move left)
 ##  btn[3] = BTNR (move right)
-set_property -dict { PACKAGE_PIN N17  IOSTANDARD LVCMOS33 } [get_ports {btn[0]}]
+set_property -dict { PACKAGE_PIN P18  IOSTANDARD LVCMOS33 } [get_ports {btn[0]}]
 set_property -dict { PACKAGE_PIN M18  IOSTANDARD LVCMOS33 } [get_ports {btn[1]}]
 set_property -dict { PACKAGE_PIN P17  IOSTANDARD LVCMOS33 } [get_ports {btn[2]}]
 set_property -dict { PACKAGE_PIN M17  IOSTANDARD LVCMOS33 } [get_ports {btn[3]}]
