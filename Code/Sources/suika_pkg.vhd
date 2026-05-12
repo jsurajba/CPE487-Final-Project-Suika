@@ -16,7 +16,7 @@ package suika_pkg is
     constant SCREEN_W   : integer := 800;
     constant SCREEN_H   : integer := 600;
 
-    -- Play area ("the jar"): 300 wide x 530 tall, centered horizontally
+    -- Play area ("the jar"): 300 wide x 300 tall, centered horizontally
     constant PLAY_LEFT  : integer := 250;
     constant PLAY_RIGHT : integer := 550;
     constant PLAY_TOP   : integer := 150;
@@ -28,8 +28,8 @@ package suika_pkg is
     ----------------------------------------------------------------------------
     -- Game parameters
     ----------------------------------------------------------------------------
-    constant MAX_FRUITS : integer := 40;   -- <<< OPTIMIZED (was 50)
-    constant NUM_TYPES  : integer := 11;   -- cherry .. watermelon
+    constant MAX_FRUITS : integer := 28;   -- Maximum # of fruits on screen = 28
+    constant NUM_TYPES  : integer := 11;   -- cherry --> watermelon
     constant DROP_TYPES : integer := 5;    -- only the smallest 5 can spawn
 
     ----------------------------------------------------------------------------
