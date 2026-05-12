@@ -113,4 +113,12 @@ We originally started with BTD6 and pivoted, so our timeline is a little compres
 - Week 4: Additional physics debugging
 
 ### Challenges
-The most difficult challenge was by far the physics engine. We faced an issue where the fruits would bounce nonstop on other fruits, and, when it came in contact with another dropped fruit from above that didn't immediately level it up, it would sink to the bottom of the enclosed space. We got it to its current state, where it minimally bounces.
+The most difficult challenge was by far the physics engine. We faced two major issues:
+1. Infinite Bouncing: fruits would bounce endlessly on top of each other rather than settling. This was solved by implementing the iterative PBD solver and adding a velocity deadzone that kills micro-motion below a threshold.
+2. Fruit Sinking: when a dropped fruit landed on top of another without merging, it would sink through it. This was caused by incorrect fixed-point arithmetic in the collision response and was resolved by the same iterative PBD solver.
+
+### Next Steps
+In the future, we would want to implement the following:
+1. Completely fix infinite bouncing: tune the velocity deadzone further to prevent any sort of micro-motion, making it much more similar to how Suika actually works.
+2. Add sound effects: Real Suika has sound effects. We would sample that audio and add it in within this code.
+3. Add faces and expressions: We didn't have time to, but if we did have more time, we would definitely implement actual faces and expressions, plus more detail to make the balls actually look like fruits.
