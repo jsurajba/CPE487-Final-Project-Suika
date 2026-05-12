@@ -154,7 +154,7 @@ begin
                 r_cur := FRUIT_RADIUS(to_integer(drop_type_r));
 
                 if frame_tick_r = '1' then
-                    repeat_div <= repeat_div + 1;
+                    repeat_div <= repeat_div + 16;
                 end if;
 
                 -- Pressed (single tap)
