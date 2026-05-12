@@ -81,10 +81,12 @@ Generative AI was used to produce an initial skeleton for the physics engine, as
 Video recording:
 
 ### Gameplay
+General Gameplay\
+![1](Images/gameplay.jpeg)
 Leveling up\
-![1](Images/leveling_up.jpeg)
+![2](Images/leveling_up.jpeg)
 Game Over\
-![2](Images/game_over.jpeg)
+![3](Images/game_over.jpeg)
 
 ## Conclusion
 
