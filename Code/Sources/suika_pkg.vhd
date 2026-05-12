@@ -28,7 +28,7 @@ package suika_pkg is
     ----------------------------------------------------------------------------
     -- Game parameters
     ----------------------------------------------------------------------------
-    constant MAX_FRUITS : integer := 28;   -- <<< OPTIMIZED (was 50)
+    constant MAX_FRUITS : integer := 40;   -- <<< OPTIMIZED (was 50)
     constant NUM_TYPES  : integer := 11;   -- cherry .. watermelon
     constant DROP_TYPES : integer := 5;    -- only the smallest 5 can spawn
 

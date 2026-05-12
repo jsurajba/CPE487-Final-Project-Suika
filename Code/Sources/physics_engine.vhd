@@ -150,7 +150,14 @@ begin
             elsif spawn_req = '1' then
                 spawn_latched <= '1';
                 spawn_x_lat   <= spawn_x;
-                spawn_t_lat   <= spawn_type;
+                
+                -- THE FIX: Prevent Out-of-Bounds indexing!
+                -- Assuming NUM_TYPES is 11 (0 to 10)
+                if to_integer(spawn_type) >= NUM_TYPES then
+                    spawn_t_lat <= (others => '0'); -- Default to cherry if garbage data arrives
+                else
+                    spawn_t_lat <= spawn_type;
+                end if;
             end if;
 
             if rst = '1' then
@@ -444,7 +451,7 @@ begin
                             j_idx <= j_idx + 1;
                             state <= S_COL_INNER_LOAD;
                         end if;
-
+                    
                     ----------------------------------------------------------
                     -- Iteration gate.
                     -- Run another full pass of (S_WALLS -> S_COL_*) until
